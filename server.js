@@ -43,16 +43,31 @@ io.on('connection', (socket) => {
         io.emit('receive-message', data);
     });
 
+    socket.on('send-reply', (data) => {
+        console.log('Reply received:', data);
+        const replyMessage = {
+            ...data,
+            replyTo: data.replyTo // Include the ID or content of the message being replied to
+        };
+        messages.push(replyMessage);
+        io.emit('receive-reply', replyMessage);
+    });
+
     socket.on('clear-chat', () => {
         console.log('Chat cleared by user.');
         messages = [];
         io.emit('chat-cleared');
     });
 
+    socket.on('mark-seen', (data) => {
+        io.emit('message-seen', data);
+    });
+
     socket.on('disconnect', () => {
         console.log('A user disconnected:', socket.id);
     });
 });
+
 app.get("/hello", (req, res) => {
     return res.send("Hello World!ddhhd");
 });
