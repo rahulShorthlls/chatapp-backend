@@ -35,7 +35,7 @@ io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
 
     socket.on('new-user', (name) => {
-        users[socket.id] = name;
+        users[socket.id] = { name, online: true };
         console.log(`${name} has joined the chat.`);
         io.emit('user-connected', { id: socket.id, name });
     });
@@ -60,21 +60,24 @@ io.on('connection', (socket) => {
         io.emit('user-typing', data); // Broadcast typing status
     });
 
+    socket.on('mark-seen', (data) => {
+        io.emit('message-seen', data); // Notify all users about read receipts
+    });
+
     socket.on('clear-chat', () => {
         console.log('Chat cleared by user.');
         messages = [];
         io.emit('chat-cleared');
     });
 
-    socket.on('mark-seen', (data) => {
-        io.emit('message-seen', data); // Notify all users about read receipts
-    });
-
     socket.on('disconnect', () => {
         console.log('A user disconnected:', socket.id);
         const user = users[socket.id];
+        if (user) {
+            user.online = false;
+            io.emit('user-disconnected', { id: socket.id, name: user.name });
+        }
         delete users[socket.id];
-        io.emit('user-disconnected', { id: socket.id, name: user });
     });
 });
 
