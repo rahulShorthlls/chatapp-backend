@@ -12,7 +12,14 @@ const io = new Server(server, {
         origin: "*",
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         credentials: true
-    }
+    },
+    transports: ['websocket', 'polling'],
+    pingTimeout: 60000,
+    pingInterval: 25000
+});
+
+io.on("connect_error", (err) => {
+    console.log(`Connect Error: ${err.message}`);
 });
 
 app.use(cors({
@@ -47,7 +54,7 @@ io.on('connection', (socket) => {
     });
 });
 app.get("/hello", (req, res) => {
-    return res.send("Hello World!");
+    return res.send("Hello World!ddhhd");
 });
 
 const PORT = process.env.PORT || 3001;
