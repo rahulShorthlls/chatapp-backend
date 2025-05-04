@@ -42,8 +42,14 @@ io.on('connection', (socket) => {
 
     socket.on('send-message', (data) => {
         console.log('Message received:', data);
-        messages.push(data);
-        io.emit('receive-message', data);
+        const messageWithSeen = {
+            ...data,
+            seen: false,
+            seenBy: [],
+            seenTimestamp: null
+        };
+        messages.push(messageWithSeen);
+        io.emit('receive-message', messageWithSeen);
     });
 
     socket.on('send-reply', (data) => {
@@ -61,7 +67,19 @@ io.on('connection', (socket) => {
     });
 
     socket.on('mark-seen', (data) => {
-        io.emit('message-seen', data); // Notify all users about read receipts
+        const { messageId, username } = data;
+        messages = messages.map(msg => {
+            if (msg.timestamp === messageId && !msg.seenBy?.includes(username)) {
+                return {
+                    ...msg,
+                    seen: true,
+                    seenBy: [...(msg.seenBy || []), username],
+                    seenTimestamp: new Date().toISOString()
+                };
+            }
+            return msg;
+        });
+        io.emit('message-seen', { ...data, seenTimestamp: new Date().toISOString() });
     });
 
     socket.on('clear-chat', () => {
